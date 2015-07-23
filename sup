@@ -1,0 +1,146 @@
+#!/bin/bash
+
+FILENAME=$0
+FILENAME=${FILENAME##*/}
+
+Version () {
+echo "$FILENAME version 0.1"
+      echo "GNU License <http://gnu.org/licenses/gpl.html>."
+      echo "This is a free software! You are allowed to change and redistribute it for free."
+      echo "Written by Luan Rodrigues - https://github.com/luoldrigues/sup"
+      echo
+      exit 0
+}
+
+Help () {
+   echo "Usage: $FILENAME <SERVICE> {COMMAND} [OPTIONS...]"
+   echo
+   echo "COMMAND:"
+   echo "  keepup           Try to KEEP the service UP"
+   echo
+   echo "OPTIONS:"
+   echo "  -h, --help       Show this help"
+   echo "  -v, --verbose    Verbosely list processed"
+   echo "      --usage      Give a short usage message"
+   echo "      --version    Print program version"
+   echo
+   echo "Examples:"
+   echo "   $FILENAME httpd keepup --verbose"
+   echo "   $FILENAME mariadb keepup -v"
+   echo "   $FILENAME firewalld keepup"
+   echo "   $FILENAME --help"
+   echo
+   echo "You might use this program in your crontab"
+   echo "Cron example:"
+   echo "  */15 * * * * $0 mariadb keepup"
+   echo "  The line above execute every 15 minutes to check the MariaDB service"
+   echo "  For more details see 'man crontab'"
+   echo
+   exit 0
+}
+
+Usage () {
+  echo "Usage: $FILENAME <SERVICE> {keepup} [--help] [--verbose] [--usage] [--version]"
+  echo
+  echo "Examples:"
+  echo "   $FILENAME httpd keepup --verbose"
+  echo "   $FILENAME mariadb keepup -v"
+  echo "   $FILENAME firewalld keepup -v"
+  echo "   $FILENAME --help"
+  echo
+  exit 0
+}
+
+ACTION=""
+SERVICE=""
+VERBOSE=0
+EXIT=0
+
+for PARM in $@; do
+  case $PARM in
+    --help|-h)
+      Help
+    ;;
+    --usage)
+      Usage
+    ;;
+    --version)
+      Version
+    ;;
+    --verbose|-v)
+      VERBOSE=1
+      continue
+    ;;
+  esac
+  if [ "$PARM" = "keepup" ]; then
+    ACTION=$PARM
+  else
+    if [ "$SERVICE" = "" ]; then
+      SERVICE=$PARM
+    fi
+  fi
+done
+
+# Remove '.service' extension
+SERVICE=${SERVICE%.service}
+
+# Service Validation
+which $SERVICE &> /dev/null
+if [ $? -ne 0 ]; then
+  # Validing group services
+  cat "/usr/lib/systemd/system/"$SERVICE".service" &> /dev/null
+  if [ $? -ne 0 ]; then
+    echo "Invalid Service"
+    echo "Try $0 [--help|-h]"
+    echo
+    exit 3
+  fi
+fi
+
+if [ "$SERVICE" = "" ]; then
+  echo "Syntax Error"
+  echo "Try $0 [--help]"
+  echo
+  exit 1
+fi
+
+case $ACTION in
+   keepup)
+     systemctl status $SERVICE &> /dev/null
+     if [ $? -eq 0 ]; then
+       # it is working well
+       if [ $VERBOSE -eq 1 ]; then
+         echo "OK: $SERVICE is working well"
+         echo
+         EXIT=0
+       fi
+     else
+       # it is not working; trying to restart
+       if [ $VERBOSE -eq 1 ]; then
+         echo "FAIL: $SERVICE is not working"
+         echo "Restarting $SERVICE"
+       fi
+       systemctl restart $SERVICE
+       # checking if it is OK
+       systemctl status $SERVICE &> /dev/null
+       if [ $? -eq 0 ]; then
+         if [ $VERBOSE -eq 1 ]; then
+           echo "OK: $SERVICE is working well"
+         fi
+         EXIT=0
+       else
+         echo "FAIL: $SERVICE is not working"
+         echo 
+         EXIT=1
+       fi
+     fi
+     exit $EXIT
+   ;;
+   *)
+     echo "Invalid Option"
+     echo "Try $0 [--help]"
+     echo
+     exit 2
+   ;;
+esac
+
