@@ -4,7 +4,7 @@ FILENAME=$0
 FILENAME=${FILENAME##*/}
 
 Version () {
-echo "$FILENAME version 0.1"
+echo "$FILENAME version 0.2"
       echo "GNU License <http://gnu.org/licenses/gpl.html>."
       echo "This is a free software! You are allowed to change and redistribute it for free."
       echo "Written by Luan Rodrigues - https://github.com/luoldrigues/sup"
@@ -13,7 +13,7 @@ echo "$FILENAME version 0.1"
 }
 
 Help () {
-   echo "Usage: $FILENAME <SERVICE> {COMMAND} [OPTIONS...]"
+   echo "Usage: $FILENAME {COMMAND} <SERVICE> [OPTIONS...]"
    echo
    echo "COMMAND:"
    echo "  keepup           Try to KEEP the service UP"
@@ -25,14 +25,14 @@ Help () {
    echo "      --version    Print program version"
    echo
    echo "Examples:"
-   echo "   $FILENAME httpd keepup --verbose"
-   echo "   $FILENAME mariadb keepup -v"
-   echo "   $FILENAME firewalld keepup"
+   echo "   $FILENAME keepup httpd --verbose"
+   echo "   $FILENAME keepup mariadb -v"
+   echo "   $FILENAME keepup firewalld"
    echo "   $FILENAME --help"
    echo
    echo "You might use this program in your crontab"
    echo "Cron example:"
-   echo "  */15 * * * * $0 mariadb keepup"
+   echo "  */15 * * * * $0 keepup mariadb"
    echo "  The line above execute every 15 minutes to check the MariaDB service"
    echo "  For more details see 'man crontab'"
    echo
@@ -40,12 +40,12 @@ Help () {
 }
 
 Usage () {
-  echo "Usage: $FILENAME <SERVICE> {keepup} [--help] [--verbose] [--usage] [--version]"
+  echo "Usage: $FILENAME {keepup} <SERVICE> [--help] [--verbose] [--usage] [--version]"
   echo
   echo "Examples:"
-  echo "   $FILENAME httpd keepup --verbose"
-  echo "   $FILENAME mariadb keepup -v"
-  echo "   $FILENAME firewalld keepup -v"
+  echo "   $FILENAME keepup httpd --verbose"
+  echo "   $FILENAME keepup mariadb -v"
+  echo "   $FILENAME keepup firewalld -v"
   echo "   $FILENAME --help"
   echo
   exit 0
@@ -54,10 +54,9 @@ Usage () {
 ACTION=""
 SERVICE=""
 VERBOSE=0
-EXIT=0
 
-for PARM in $@; do
-  case $PARM in
+while true; do
+  case $1 in
     --help|-h)
       Help
     ;;
@@ -69,16 +68,19 @@ for PARM in $@; do
     ;;
     --verbose|-v)
       VERBOSE=1
-      continue
+    ;;
+    keepup)
+      ACTION=$1
+      if [ "$SERVICE" = "" ]; then
+        SERVICE=$2
+        shift
+      fi
+    ;;
+    *)
+      break
     ;;
   esac
-  if [ "$PARM" = "keepup" ]; then
-    ACTION=$PARM
-  else
-    if [ "$SERVICE" = "" ]; then
-      SERVICE=$PARM
-    fi
-  fi
+  shift
 done
 
 # Remove '.service' extension
@@ -112,7 +114,6 @@ case $ACTION in
        if [ $VERBOSE -eq 1 ]; then
          echo "OK: $SERVICE is working well"
          echo
-         EXIT=0
        fi
      else
        # it is not working; trying to restart
@@ -127,14 +128,12 @@ case $ACTION in
          if [ $VERBOSE -eq 1 ]; then
            echo "OK: $SERVICE is working well"
          fi
-         EXIT=0
        else
          echo "FAIL: $SERVICE is not working"
          echo 
-         EXIT=1
+         exit 1
        fi
      fi
-     exit $EXIT
    ;;
    *)
      echo "Invalid Option"

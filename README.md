@@ -1,8 +1,8 @@
 SUP (Service Up)
 ================
-Check a specified service status to keep it running.
+This is a script which check a service status to make sure that it is running. If the service is off, this script will start it to keep the service running.
 
-PS: You should execute this application using root user or other user which is allowed to execute commands to restart services (using: systemctl)
+WARNING: You have to execute this application as root or another user which is allowed to execute commands to manage services, such as systemctl.
 
 Installation
 ============
@@ -60,7 +60,7 @@ Version
 =======
 ```sh
 $ sup --version
-sup version 0.1
+sup version 0.2
 GNU License <http://gnu.org/licenses/gpl.html>.
 This is a free software! You are allowed to change and redistribute it for free.
 Written by Luan Rodrigues - https://github.com/luoldrigues/sup
