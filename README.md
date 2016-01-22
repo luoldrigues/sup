@@ -19,7 +19,7 @@ Help
 ====
 ```sh
 $ sup --help
-Usage: sup <SERVICE> {COMMAND} [OPTIONS...]
+Usage: sup {COMMAND} <SERVICE> [OPTIONS...]
 
 COMMAND:
   keepup           Try to KEEP the service UP
@@ -31,9 +31,9 @@ OPTIONS:
       --version    Print program version
 
 Examples:
-   sup httpd keepup --verbose
-   sup mariadb keepup -v
-   sup firewalld keepup -v
+   sup keepup httpd --verbose
+   sup keepup mariadb -v
+   sup keepup firewalld -v
    sup --help
 
 You might use this program in your crontab
@@ -47,12 +47,12 @@ Usage
 =====
 ```sh
 $ sup --usage
-Usage: sup <SERVICE> {keepup} [--help] [--verbose] [--usage] [--version]
+Usage: sup {keepup} <SERVICE> [--help] [--verbose] [--usage] [--version]
 
 Examples:
-   sup httpd keepup --verbose
-   sup mariadb keepup -v
-   sup firewalld keepup
+   sup keepup httpd --verbose
+   sup keepup mariadb -v
+   sup keepup firewalld
    sup --help
 ```
 
